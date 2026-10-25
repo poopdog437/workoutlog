@@ -362,7 +362,7 @@ function vSession(){
 }
 function exSub(s,n){
   const e=s.ex[n];const v=validSets(e);
-  if(v.length){const m=summary(v);return v.length+" set"+(v.length>1?"s":"")+(m.top!=null?" · top "+fmtN(m.top)+" kg":"")}
+  if(v.length){const t=v.filter(x=>x.kg!=null&&x.reps>=6).reduce((a,x)=>!a||x.kg>a.kg||(x.kg===a.kg&&x.reps>a.reps)?x:a,null);return v.length+" set"+(v.length>1?"s":"")+(t?" · top "+fmtN(t.kg)+" kg with "+fmtN(t.reps)+" reps":"")}
   const prev=formatLastSession(n,s);
   if(prev)return prev;
   return "Not started";
