@@ -247,11 +247,9 @@ nav button.on{color:var(--accent);background:rgba(255,255,255,.14);box-shadow:in
 .stats.three b{background:linear-gradient(180deg,#fff,#b7c4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 
 /* muscles */
-.grad{width:170px;height:10px;border-radius:5px;background:linear-gradient(90deg,rgb(16,14,48),rgb(72,16,128),rgb(190,28,96),rgb(255,96,16),rgb(255,200,24),rgb(255,250,214))}
+.grad{width:170px;height:10px;border-radius:5px;background:linear-gradient(90deg,rgb(58,62,80),rgb(10,132,255))}
 .heat,.heat .eyebrow,.heat .hint,.heat .scale,.heat .bodies figcaption,.heat .rk-w,.heat .rk-t .num,.heat .mm span,.heat .rk-n,.heat .seg button,.heat .msg{color:#fff}
 .heat .seg button.on{background:rgba(255,255,255,.22)}
-.heat .bodies{background:radial-gradient(80% 60% at 50% 40%,rgba(120,20,90,.35),rgba(4,5,14,.92));border-color:rgba(255,120,40,.25)}
-.heat .bodies svg{filter:drop-shadow(0 0 10px rgba(255,90,20,.45)) saturate(1.15)}
 .heat .rk-bar{background:rgba(255,255,255,.08)}
 .scale{justify-content:center}
 .bodies svg path{transition:fill .3s}
@@ -609,8 +607,8 @@ function drawCharts(){
 }
 
 /* muscles */
-const IR=[[0,[16,14,48]],[.2,[72,16,128]],[.4,[190,28,96]],[.6,[255,96,16]],[.8,[255,200,24]],[1,[255,250,214]]];
-const mix=r=>{if(!r)return "rgb(20,20,44)";for(let i=1;i<IR.length;i++){const[b,B]=IR[i];if(r<=b){const[a,A]=IR[i-1];const f=(r-a)/(b-a);return "rgb("+A.map((x,k)=>Math.round(x+(B[k]-x)*f)).join(",")+")"}}return "rgb(255,250,214)"};
+const BASE=[58,62,80],ACC=[10,132,255];
+const mix=t=>"rgb("+BASE.map((b,k)=>Math.round(b+(ACC[k]-b)*t)).join(",")+")";
 const LEVELS=[0,.25,.5,.75,1];
 function heatVals(){
   const cut=new Date();cut.setDate(cut.getDate()-(S.heat-1));const c=ymd(cut);
@@ -624,7 +622,7 @@ function lastHit(){
   return r;
 }
 /* anatomical figure: left half drawn once, mirrored for the right */
-const NEU="#14162e";
+const NEU="var(--body)";
 function half(c,side){
   const f=side==="front";
   const P=(d,fill)=>`<path d="${d}" fill="${fill}"/>`;
