@@ -256,6 +256,15 @@ nav button.on{color:var(--accent);background:rgba(255,255,255,.14);box-shadow:in
 .mm div{border-radius:20px;padding:12px 14px;background:var(--surface);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid var(--line);box-shadow:var(--glass-shadow)}
 .mm span{display:block;font-size:12px;color:var(--muted)}
 .mm b{font-size:18px}
+.editbtn{height:38px;padding:0 18px;font-size:15px}
+.edcard{display:flex;flex-direction:column;gap:6px;padding:14px 16px}
+.edh{display:flex;align-items:center;justify-content:space-between}
+.edh b{font-size:20px;font-weight:700}
+.edrow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);font-size:15px}
+.edadd{display:flex;gap:8px;margin-top:6px}
+.edadd input{flex:1;min-width:0;height:44px;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:999px;padding:0 16px;font-size:16px}
+.edadd input:focus{border-color:var(--accent);outline:none}
+.edadd .btn{height:44px;padding:0 18px;font-size:15px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -295,7 +304,7 @@ const HITS={
 const ALL_EX=Object.values(WORKOUTS).flatMap(w=>w.ex);
 const BASE_EX={};for(const k in WORKOUTS)BASE_EX[k]=WORKOUTS[k].ex.slice();
 
-const S={sessions:{},view:"home",activeId:null,open:{},calOff:0,progEx:null,heat:7,hmode:"map",armed:false,synced:false,needsRender:false,adding:false,custom:{},selDay:null,pm:"top"};
+const S={edit:false,order:[],sessions:{},view:"home",activeId:null,open:{},calOff:0,progEx:null,heat:7,hmode:"map",armed:false,synced:false,needsRender:false,adding:false,custom:{},selDay:null,pm:"top"};
 const LS="lift-log-v1";
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
@@ -308,7 +317,37 @@ S.pm=lsGet(LS+"-pm","top");
 if(S.activeId&&!S.sessions[S.activeId])S.activeId=null;
 S.open=lsGet(LS+"-open",{})||{};
 S.custom=lsGet(LS+"-custom",{})||{};
-for(const k in WORKOUTS)WORKOUTS[k].ex=BASE_EX[k].concat(S.custom[k]||[]);
+const CFG=LS+"-cfg";
+(function(){
+  const c=lsGet(CFG,null);
+  if(c&&c.W){S.order=c.order||Object.keys(c.W);for(const k in c.W)WORKOUTS[k]=Object.assign({name:k,ex:[],gone:[],hidden:false},c.W[k])}
+  else{S.order=Object.keys(WORKOUTS);for(const k in WORKOUTS){WORKOUTS[k].ex=BASE_EX[k].concat(S.custom[k]||[]);WORKOUTS[k].gone=[]}}
+  for(const k in WORKOUTS){if(!WORKOUTS[k].gone)WORKOUTS[k].gone=[];if(!S.order.includes(k))S.order.push(k)}
+})();
+function saveCfg(){const W={};for(const k in WORKOUTS){const w=WORKOUTS[k];W[k]={name:w.name,ex:w.ex,gone:w.gone,hidden:!!w.hidden}}lsSet(CFG,{W,order:S.order})}
+const visible=()=>S.order.filter(k=>WORKOUTS[k]&&!WORKOUTS[k].hidden);
+const cleanName=n=>(n||"").replace(/["'<>&\\]/g,"").replace(/\s+/g," ").trim();
+function canonName(name){
+  const l=name.toLowerCase();
+  for(const k in WORKOUTS){for(const n of WORKOUTS[k].ex.concat(WORKOUTS[k].gone))if(n.toLowerCase()===l)return n}
+  for(const x of Object.values(S.sessions))for(const n in x.ex)if(n.toLowerCase()===l)return n;
+  return name;
+}
+function addEx(k,raw){
+  const nm=cleanName(raw);if(!nm)return null;
+  const w=WORKOUTS[k];const name=canonName(nm);
+  if(w.ex.some(x=>x.toLowerCase()===name.toLowerCase()))return name;
+  w.gone=w.gone.filter(x=>x!==name);w.ex.push(name);saveCfg();return name;
+}
+function rmEx(k,name){const w=WORKOUTS[k];w.ex=w.ex.filter(x=>x!==name);if(!w.gone.includes(name))w.gone.push(name);saveCfg()}
+function addWorkout(raw){
+  const name=cleanName(raw);if(!name)return null;
+  let k=Object.keys(WORKOUTS).find(x=>WORKOUTS[x].name.toLowerCase()===name.toLowerCase());
+  if(k){WORKOUTS[k].hidden=false;if(!S.order.includes(k))S.order.push(k)}
+  else{const b=slug(name)||"w";k=b;let i=2;while(WORKOUTS[k])k=b+"-"+i++;WORKOUTS[k]={name,ex:[],gone:[],hidden:false};S.order.push(k)}
+  saveCfg();return k;
+}
+function sessEx(sess){const w=WORKOUTS[sess.workout];return w.ex.concat(Object.keys(sess.ex).filter(n=>!w.ex.includes(n)&&validSets(sess.ex[n]).length))}
 
 /* ---------- dates ---------- */
 const pad=n=>String(n).padStart(2,"0");
@@ -407,7 +446,8 @@ const chev='<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="n
 
 /* ---------- views ---------- */
 const WCOL={push:"#0a84ff",pull:"#bf5af2",legs:"#30d158"};
-const wcol=k=>WCOL[k]||"#64d2ff";
+const PAL=["#0a84ff","#bf5af2","#30d158","#ff9f0a","#ff375f","#64d2ff"];
+const wcol=k=>WCOL[k]||PAL[Math.max(0,Object.keys(WORKOUTS).indexOf(k))%PAL.length];
 const mondayOf=d=>{const c=new Date(d);c.setDate(c.getDate()-((c.getDay()+6)%7));return c};
 const wkStart=()=>ymd(mondayOf(new Date()));
 function weekStreak(L){
@@ -430,14 +470,14 @@ function vHome(){
     const e=week.find(([,s])=>s.date===k);const c=e?wcol(e[1].workout):"";
     return `<div class="wd ${k===ymd()?"today":""}"><span>${l}</span><i class="${e?"on":""}" ${e?`style="background:${c};"`:""}>${e?tick:d.getDate()}</i></div>`;
   }).join("");
-  const order=Object.keys(WORKOUTS);
+  const order=visible();
   const lastOf=k=>{const f=L.find(([,s])=>s.workout===k);return f?f[1].date:null};
   const next=order.slice().sort((a,b)=>{const x=lastOf(a),y=lastOf(b);return x===y?order.indexOf(a)-order.indexOf(b):!x?-1:!y?1:x.localeCompare(y)})[0];
-  const nl=lastOf(next);
+  const nl=next?lastOf(next):null;
   const live=S.activeId&&S.sessions[S.activeId];
   const nextCard=live
     ?`<div class="next" style="--c:${wcol(live.workout)}"><div><div class="eyebrow">In progress</div><div class="nname">${WORKOUTS[live.workout].name}</div><div class="muted">${fmtLong(live.date)}</div></div><button class="btn btn-primary" data-act="open" data-id="${S.activeId}">Continue</button></div>`
-    :`<div class="next" style="--c:${wcol(next)}"><div><div class="eyebrow">Up next</div><div class="nname">${WORKOUTS[next].name}</div><div class="muted">${nl?(daysAgo(nl)===0?"Done today":"Last done "+daysAgo(nl)+"d ago"):"Not done yet"}</div></div><button class="btn btn-primary" data-act="start" data-w="${next}">Start</button></div>`;
+    :!next?"":`<div class="next" style="--c:${wcol(next)}"><div><div class="eyebrow">Up next</div><div class="nname">${WORKOUTS[next].name}</div><div class="muted">${nl?(daysAgo(nl)===0?"Done today":"Last done "+daysAgo(nl)+"d ago"):"Not done yet"}</div></div><button class="btn btn-primary" data-act="start" data-w="${next}">Start</button></div>`;
   const lw=L[0];
   const lastCard=lw?`<div class="eyebrow" style="margin-top:6px">Last workout</div><div class="list" style="margin-top:6px">${liHtml(lw)}</div>`:"";
   return `<section class="home">
@@ -456,19 +496,26 @@ function liHtml([id,s]){
 }
 function vPick(){
   const L=logged();
-  return `<div class="eyebrow">Train</div><h1>Pick a workout</h1>
-  <div class="pick">${Object.entries(WORKOUTS).map(([k,w])=>{
+  const head=`<div class="row" style="align-items:flex-end"><div><div class="eyebrow">Train</div><h1>${S.edit?"Edit workouts":"Pick a workout"}</h1></div><div class="spacer"></div><button class="btn btn-ghost editbtn" data-act="edit">${S.edit?"Done":"Edit"}</button></div>`;
+  if(S.edit){
+    const cards=visible().map(k=>{const w=WORKOUTS[k];return `<div class="card edcard"><div class="edh"><b>${w.name}</b><button class="x" data-act="wrm" data-w="${k}" aria-label="Remove ${w.name}">×</button></div>
+      ${w.ex.length?w.ex.map(n=>`<div class="edrow"><span>${n}</span><button class="x" data-act="exrm" data-w="${k}" data-ex="${n}" aria-label="Remove ${n}">×</button></div>`).join(""):`<div class="hint">No exercises yet</div>`}
+      <div class="edadd"><input id="exa-${k}" data-go="1" placeholder="Add exercise" maxlength="40" autocomplete="off" aria-label="Add exercise to ${w.name}"><button class="btn btn-primary" data-act="exadd" data-w="${k}">Add</button></div></div>`}).join("");
+    return head+`<div class="stack" style="margin-top:18px">${cards}<div class="card edcard"><div class="edh"><b>New workout</b></div><div class="edadd"><input id="new-w" data-go="1" placeholder="Workout name" maxlength="24" autocomplete="off" aria-label="New workout name"><button class="btn btn-primary" data-act="wadd">Add</button></div></div></div>`;
+  }
+  return head+`<div class="pick">${visible().map(k=>{const w=WORKOUTS[k];
     const last=L.find(([,s])=>s.workout===k);
     const meta=w.ex.length+" exercises · "+(last?(daysAgo(last[1].date)===0?"done today":"last "+daysAgo(last[1].date)+"d ago"):"not done yet");
     return `<button data-act="start" data-w="${k}"><span class="pname">${w.name}</span><span class="pmeta">${meta}</span><span class="parrow">→</span></button>`;
-  }).join("")}</div>`;
+  }).join("")||`<div class="empty"><b>No workouts</b>Tap Edit to add one.</div>`}</div>`;
 }
 function vSession(){
   const s=S.sessions[S.activeId],w=WORKOUTS[s.workout];
-  const done=w.ex.filter(n=>s.ex[n]&&s.ex[n].done).length;
-  return `<div class="sess-head"><div><div class="eyebrow">${fmtLong(s.date)}</div><h1>${w.name}</h1></div><div class="spacer"></div><div class="num muted" style="font-size:13px">${done}/${w.ex.length} done</div></div>
-  <div class="bar"><b style="width:${done/w.ex.length*100}%"></b></div>
-  <div class="stack">${w.ex.map(n=>exCard(s,n)).join("")}</div>
+  const names=sessEx(s);
+  const done=names.filter(n=>s.ex[n]&&s.ex[n].done).length;
+  return `<div class="sess-head"><div><div class="eyebrow">${fmtLong(s.date)}</div><h1>${w.name}</h1></div><div class="spacer"></div><div class="num muted" style="font-size:13px">${done}/${names.length} done</div></div>
+  <div class="bar"><b style="width:${names.length?done/names.length*100:0}%"></b></div>
+  <div class="stack">${names.map(n=>exCard(s,n)).join("")}</div>
   <div class="addex">${S.adding?`<div class="addrow"><input id="newex" placeholder="Exercise name" maxlength="40" autocomplete="off" aria-label="Exercise name"><button class="btn btn-primary" data-act="addexgo">Add</button><button class="btn btn-ghost" data-act="addexcancel">Cancel</button></div>`:`<button class="btn btn-ghost" data-act="addex">+ Add exercise</button>`}</div>
   <div class="sess-foot">
     <button class="btn btn-primary" data-act="finish">Finish workout</button>
@@ -542,7 +589,11 @@ function progData(n){
 }
 function vProgress(){
   const n=S.progEx;const D=progData(n);
-  const opts=Object.values(WORKOUTS).map(w=>`<optgroup label="${w.name}">${w.ex.map(e=>`<option ${e===n?"selected":""}>${e}</option>`).join("")}</optgroup>`).join("");
+  const cur=new Set(visible().flatMap(k=>WORKOUTS[k].ex));
+  const old=new Set(Object.values(WORKOUTS).flatMap(w=>w.ex.concat(w.gone)));Object.values(S.sessions).forEach(x=>Object.keys(x.ex).forEach(e=>old.add(e)));
+  const rem=[...old].filter(e=>!cur.has(e)&&progData(e).length);
+  const o=e=>`<option ${e===n?"selected":""}>${e}</option>`;
+  const opts=visible().map(k=>`<optgroup label="${WORKOUTS[k].name}">${WORKOUTS[k].ex.map(o).join("")}</optgroup>`).join("")+(rem.length?`<optgroup label="Removed">${rem.map(o).join("")}</optgroup>`:"");
   const m=PM.find(x=>x[0]===S.pm)||PM[0];
   let body;
   const pts=D.filter(d=>d[m[0]]!=null);
@@ -698,7 +749,7 @@ function render(){
   document.getElementById("tabs").innerHTML=TABS.map(([k,l])=>`<button data-act="tab" data-v="${k}" class="${S.view===k?"on":""}" ${S.view===k?'aria-current="page"':""}>${IC[k]}${l}</button>`).join("");
   if(S.view==="progress")drawCharts();
 }
-function go(v){S.view=v;S.armed=false;S.adding=false;lsSet(LS+"-view",v);render();document.getElementById("scroll").scrollTop=0}
+function go(v){S.view=v;S.armed=false;S.adding=false;S.edit=false;lsSet(LS+"-view",v);render();document.getElementById("scroll").scrollTop=0}
 function setActive(id){S.activeId=id;lsSet(LS+"-active",id)}
 
 document.addEventListener("click",ev=>{
@@ -713,12 +764,16 @@ document.addEventListener("click",ev=>{
   if(a==="addex"){S.adding=true;render();const el=document.getElementById("newex");if(el)el.focus();return}
   if(a==="addexcancel"){S.adding=false;return render()}
   if(a==="addexgo"&&s){
-    const el=document.getElementById("newex");const name=(el?el.value:"").replace(/["'<>&\\]/g,"").replace(/\s+/g," ").trim();
+    const el=document.getElementById("newex");
+    const name=addEx(s.workout,el?el.value:"");
     if(!name)return el&&el.focus();
-    const w=s.workout;
-    if(!WORKOUTS[w].ex.some(x=>x.toLowerCase()===name.toLowerCase())){(S.custom[w]=S.custom[w]||[]).push(name);lsSet(LS+"-custom",S.custom);WORKOUTS[w].ex.push(name)}
     S.open[name]=true;S.adding=false;return render();
   }
+  if(a==="edit"){S.edit=!S.edit;return render()}
+  if(a==="exrm"){rmEx(b.dataset.w,n);return render()}
+  if(a==="wrm"){WORKOUTS[b.dataset.w].hidden=true;saveCfg();return render()}
+  if(a==="exadd"){const el=document.getElementById("exa-"+b.dataset.w);addEx(b.dataset.w,el?el.value:"");render();const e2=document.getElementById("exa-"+b.dataset.w);if(e2)e2.focus();return}
+  if(a==="wadd"){const el=document.getElementById("new-w");const k=addWorkout(el?el.value:"");render();const e2=document.getElementById(k?"exa-"+k:"new-w");if(e2)e2.focus();return}
   if(a==="toggle"){S.open[n]=!S.open[n];return render()}
   if(a==="done"&&s){const e=s.ex[n]||(s.ex[n]={sets:[],done:false});e.done=!e.done;if(e.done){S.open[n]=false;const w=WORKOUTS[s.workout].ex;const nx=w.find(x=>!(s.ex[x]&&s.ex[x].done));if(nx&&!validSets(s.ex[nx]).length)S.open[nx]=true}else S.open[n]=true;persist(S.activeId);return render()}
   if(a==="add"&&s){const e=s.ex[n]||(s.ex[n]={sets:[],done:false});e.sets.push({kg:null,reps:null});persist(S.activeId);render();const el=document.getElementById("kg-"+slug(n)+"-"+(e.sets.length-1));if(el)el.focus();return}
@@ -730,7 +785,7 @@ document.addEventListener("click",ev=>{
   if(a==="heat"){S.heat=+b.dataset.d;return render()}
   if(a==="hmode"){S.hmode=b.dataset.d;lsSet(LS+"-hmode",S.hmode);return render()}
 });
-document.addEventListener("keydown",ev=>{if(ev.key==="Enter"&&ev.target.id==="newex"){ev.preventDefault();const b=document.querySelector('[data-act="addexgo"]');if(b)b.click()}});
+document.addEventListener("keydown",ev=>{if(ev.key!=="Enter")return;const t=ev.target;if(t.id==="newex"){ev.preventDefault();const b=document.querySelector('[data-act="addexgo"]');if(b)b.click()}else if(t.dataset&&t.dataset.go){ev.preventDefault();const b=t.parentElement.querySelector("[data-act]");if(b)b.click()}});
 document.addEventListener("input",ev=>{
   const t=ev.target;if(!t.dataset||!t.dataset.f)return;
   const s=S.sessions[S.activeId];if(!s)return;
