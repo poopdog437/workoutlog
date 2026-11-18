@@ -247,7 +247,12 @@ nav button.on{color:var(--accent);background:rgba(255,255,255,.14);box-shadow:in
 .stats.three b{background:linear-gradient(180deg,#fff,#b7c4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 
 /* muscles */
-.grad{width:150px;height:10px;border-radius:5px;background:linear-gradient(90deg,hsl(130 85% 52%),hsl(87 85% 52%),hsl(43 85% 52%),hsl(0 85% 52%))}
+.grad{width:170px;height:10px;border-radius:5px;background:linear-gradient(90deg,rgb(16,14,48),rgb(72,16,128),rgb(190,28,96),rgb(255,96,16),rgb(255,200,24),rgb(255,250,214))}
+.heat,.heat .eyebrow,.heat .hint,.heat .scale,.heat .bodies figcaption,.heat .rk-w,.heat .rk-t .num,.heat .mm span,.heat .rk-n,.heat .seg button,.heat .msg{color:#fff}
+.heat .seg button.on{background:rgba(255,255,255,.22)}
+.heat .bodies{background:radial-gradient(80% 60% at 50% 40%,rgba(120,20,90,.35),rgba(4,5,14,.92));border-color:rgba(255,120,40,.25)}
+.heat .bodies svg{filter:drop-shadow(0 0 10px rgba(255,90,20,.45)) saturate(1.15)}
+.heat .rk-bar{background:rgba(255,255,255,.08)}
 .scale{justify-content:center}
 .bodies svg path{transition:fill .3s}
 .mm{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -304,6 +309,7 @@ S.progEx=lsGet(LS+"-prog",ALL_EX[0]);
 S.hmode=lsGet(LS+"-hmode","map");
 S.pm=lsGet(LS+"-pm","top");
 if(S.activeId&&!S.sessions[S.activeId])S.activeId=null;
+S.open=lsGet(LS+"-open",{})||{};
 S.custom=lsGet(LS+"-custom",{})||{};
 for(const k in WORKOUTS)WORKOUTS[k].ex=BASE_EX[k].concat(S.custom[k]||[]);
 
@@ -603,7 +609,8 @@ function drawCharts(){
 }
 
 /* muscles */
-const mix=t=>t?`hsl(${Math.round(130*(1-(t-.25)/.75))} 85% 52%)`:"rgb(58,62,80)";
+const IR=[[0,[16,14,48]],[.2,[72,16,128]],[.4,[190,28,96]],[.6,[255,96,16]],[.8,[255,200,24]],[1,[255,250,214]]];
+const mix=r=>{if(!r)return "rgb(20,20,44)";for(let i=1;i<IR.length;i++){const[b,B]=IR[i];if(r<=b){const[a,A]=IR[i-1];const f=(r-a)/(b-a);return "rgb("+A.map((x,k)=>Math.round(x+(B[k]-x)*f)).join(",")+")"}}return "rgb(255,250,214)"};
 const LEVELS=[0,.25,.5,.75,1];
 function heatVals(){
   const cut=new Date();cut.setDate(cut.getDate()-(S.heat-1));const c=ymd(cut);
@@ -611,13 +618,13 @@ function heatVals(){
   for(const[,s]of logged()){if(s.date<c)continue;for(const[n,e]of Object.entries(s.ex)){const k=validSets(e).length;if(!k||!HITS[n])continue;for(const[m,f]of Object.entries(HITS[n]))v[m]+=k*f}}
   return v;
 }
-function lvl(v,max){if(!v||!max)return 0;return LEVELS[Math.max(1,Math.ceil(v/max*4))]}
+function lvl(v,max){if(!v||!max)return 0;return Math.max(.12,v/max)}
 function lastHit(){
   const r={};for(const[,s]of logged()){for(const[n,e]of Object.entries(s.ex)){if(!validSets(e).length||!HITS[n])continue;for(const[m,f]of Object.entries(HITS[n]))if(f>=.5&&!r[m])r[m]=s.date}}
   return r;
 }
 /* anatomical figure: left half drawn once, mirrored for the right */
-const NEU="var(--body)";
+const NEU="#14162e";
 function half(c,side){
   const f=side==="front";
   const P=(d,fill)=>`<path d="${d}" fill="${fill}"/>`;
@@ -656,7 +663,8 @@ function figure(c,side){
       ${h}<g transform="translate(200 0) scale(-1 1)">${h}</g>
     </g></svg>`;
 }
-function vMuscles(){
+function vMuscles(){return `<div class="heat">${vMusclesInner()}</div>`}
+function vMusclesInner(){
   const v=heatVals();const max=Math.max(...Object.values(v));
   const c=m=>mix(lvl(v[m],max));
   const seg=(k,opts)=>`<div class="seg">${opts.map(([val,l])=>`<button data-act="${k}" data-d="${val}" class="${String(S[k==="heat"?"heat":"hmode"])===String(val)?"on":""}">${l}</button>`).join("")}</div>`;
@@ -673,7 +681,7 @@ function vMuscles(){
     return head+none+`<div class="rank">${rows}</div><p class="hint" style="margin-top:12px">Most trained at the top. Muscles near the bottom are the ones to catch up on.</p>`;
   }
   const ent=Object.entries(MUSCLES).sort((a,b)=>v[b[0]]-v[a[0]]);
-  const mm=max?`<div class="mm"><div><span>Most trained</span><b style="color:${mix(1)}">${ent[0][1]}</b></div><div><span>Needs work</span><b>${ent[ent.length-1][1]}</b></div></div>`:"";
+  const mm=max?`<div class="mm"><div><span>Most trained</span><b>${ent[0][1]}</b></div><div><span>Needs work</span><b>${ent[ent.length-1][1]}</b></div></div>`:"";
   return head+mm+`<div class="bodies"><figure>${figure(c,"front")}<figcaption>Front</figcaption></figure><figure>${figure(c,"back")}<figcaption>Back</figcaption></figure></div>
   <div class="scale">Less <i class="grad"></i> More</div>${none}
   <p class="hint">Counts working sets. Secondary muscles get partial credit, e.g. triceps get half a set from incline press.</p>`;
@@ -688,6 +696,7 @@ function render(){
   else if(S.view==="days")h=vDays();
   else if(S.view==="progress")h=vProgress();
   else h=vMuscles();
+  lsSet(LS+"-open",S.open);
   view.innerHTML=h;
   document.getElementById("tabs").innerHTML=TABS.map(([k,l])=>`<button data-act="tab" data-v="${k}" class="${S.view===k?"on":""}" ${S.view===k?'aria-current="page"':""}>${IC[k]}${l}</button>`).join("");
   if(S.view==="progress")drawCharts();
@@ -700,7 +709,7 @@ document.addEventListener("click",ev=>{
   const a=b.dataset.act,n=b.dataset.ex,s=S.sessions[S.activeId];
   if(a!=="del")S.armed=false;
   if(a==="tab")return go(b.dataset.v);
-  if(a==="start"){const w=b.dataset.w,id=ymd()+"_"+w;if(!S.sessions[id])S.sessions[id]={date:ymd(),workout:w,ts:Date.now(),ex:{}};setActive(id);S.open={};S.open[WORKOUTS[w].ex.find(x=>!(S.sessions[id].ex[x]&&S.sessions[id].ex[x].done))||WORKOUTS[w].ex[0]]=true;return go("train")}
+  if(a==="start"){const w=b.dataset.w,id=ymd()+"_"+w;if(!S.sessions[id]){S.sessions[id]={date:ymd(),workout:w,ts:Date.now(),ex:{}};lsSet(LS,S.sessions)}setActive(id);S.open={};S.open[WORKOUTS[w].ex.find(x=>!(S.sessions[id].ex[x]&&S.sessions[id].ex[x].done))||WORKOUTS[w].ex[0]]=true;return go("train")}
   if(a==="open"){setActive(b.dataset.id);S.open={};return go("train")}
   if(a==="finish"){setActive(null);S.open={};return go("days")}
   if(a==="del"){if(!S.armed){S.armed=true;return render()}const id=S.activeId;delete S.sessions[id];persist(id);setActive(null);S.armed=false;return go("train")}
