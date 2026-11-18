@@ -32,7 +32,9 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg);color:var(--fg)}
-body{margin:0;color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{margin:0;color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased}
+#scroll{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:
   radial-gradient(60% 42% at 10% 0%,rgba(10,132,255,.5),transparent 70%),
   radial-gradient(50% 38% at 100% 18%,rgba(191,90,242,.38),transparent 70%),
@@ -46,7 +48,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 /* shared glass surface */
 .ex,.pick button,.stats,.cal,.panel,.bodies,.seg,.sel select,.empty,nav .in,.addrow{background:var(--surface);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid var(--line);box-shadow:var(--glass-shadow)}
 
-#app{max-width:560px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:20px calc(112px + env(safe-area-inset-bottom,0px))}
+#app{max-width:560px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(112px + env(safe-area-inset-bottom,0px))}
 .eyebrow{font-weight:600;font-size:13px;color:var(--muted);letter-spacing:.01em;margin-bottom:2px}
 h1,h2{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;line-height:1.05;letter-spacing:-.02em}
 h1{font-size:36px}
@@ -259,7 +261,7 @@ nav button.on{color:var(--accent);background:rgba(255,255,255,.14);box-shadow:in
 
 </head>
 <body>
-<div id="app"><div id="view"></div></div>
+<div id="scroll"><div id="app"><div id="view"></div></div></div>
 <nav><div class="in" id="tabs"></div></nav>
 
 <script>
@@ -696,7 +698,7 @@ function render(){
   document.getElementById("tabs").innerHTML=TABS.map(([k,l])=>`<button data-act="tab" data-v="${k}" class="${S.view===k?"on":""}" ${S.view===k?'aria-current="page"':""}>${IC[k]}${l}</button>`).join("");
   if(S.view==="progress")drawCharts();
 }
-function go(v){S.view=v;S.armed=false;S.adding=false;lsSet(LS+"-view",v);render();window.scrollTo(0,0)}
+function go(v){S.view=v;S.armed=false;S.adding=false;lsSet(LS+"-view",v);render();document.getElementById("scroll").scrollTop=0}
 function setActive(id){S.activeId=id;lsSet(LS+"-active",id)}
 
 document.addEventListener("click",ev=>{
