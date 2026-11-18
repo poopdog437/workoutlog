@@ -59,7 +59,7 @@ h2{font-size:22px}
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:999px;font-weight:600;font-size:16px;transition:transform .12s,opacity .12s}
-.btn-primary{background:linear-gradient(180deg,#3a9bff,#0a84ff);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 18px rgba(10,132,255,.4)}
+.btn-primary{background:linear-gradient(180deg,#3a9bff,#0a84ff);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
 .btn-ghost{background:var(--surface-2);color:var(--fg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
 .btn-line{border:1px solid var(--line);color:var(--fg)}
 .btn-danger{background:rgba(255,69,58,.14);color:var(--danger);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
@@ -72,7 +72,7 @@ h2{font-size:22px}
 .home h1 span{background:linear-gradient(90deg,#64d2ff,#0a84ff 45%,#bf5af2);-webkit-background-clip:text;background-clip:text;color:transparent}
 .sync{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
-.sync.on i{background:#30d158;box-shadow:0 0 8px #30d158}
+.sync.on i{background:#30d158}
 
 /* workout picker */
 .pick{display:flex;flex-direction:column;gap:12px;margin-top:20px}
@@ -105,7 +105,7 @@ h2{font-size:22px}
 .set .n{color:var(--muted);text-align:center;font-size:14px;font-weight:600}
 .field{position:relative}
 .field input{width:100%;height:46px;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:14px;padding:0 44px 0 14px;font-size:17px;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px 3px rgba(0,0,0,.3)}
-.field input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.field input:focus{border-color:var(--accent);outline:none}
 .field span{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
 .x{height:36px;width:36px;border-radius:50%;color:var(--muted);display:grid;place-items:center;font-size:20px}
 .x:active{background:var(--surface-2);color:var(--fg)}
@@ -118,7 +118,7 @@ h2{font-size:22px}
 .addex>.btn{width:100%}
 .addrow{display:flex;gap:8px;padding:10px;border-radius:24px;align-items:center}
 .addrow input{flex:1;min-width:0;height:46px;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:999px;padding:0 16px;font-size:16px}
-.addrow input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.addrow input:focus{border-color:var(--accent);outline:none}
 .addrow .btn{height:46px;padding:0 16px;font-size:15px}
 
 /* days */
@@ -223,10 +223,10 @@ nav button.on{color:var(--accent);background:rgba(255,255,255,.14);box-shadow:in
 .cal-g .d b{font-weight:inherit}
 .cal-g .d.on{background:rgba(255,255,255,.12);color:var(--fg);font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
 .cal-g .d.picked{background:rgba(10,132,255,.35);box-shadow:inset 0 0 0 1.5px var(--accent)}
-.cal-g .d.today b{color:#fff;background:var(--accent);border-radius:50%;width:26px;height:26px;display:grid;place-items:center;box-shadow:0 2px 10px rgba(10,132,255,.6)}
+.cal-g .d.today b{color:#fff;background:var(--accent);border-radius:50%;width:26px;height:26px;display:grid;place-items:center}
 .cal-g .d.blank{background:transparent}
 .dots{display:flex;gap:3px;height:6px}
-.dots i{width:6px;height:6px;border-radius:50%;box-shadow:0 0 6px currentColor}
+.dots i{width:6px;height:6px;border-radius:50%}
 .legend-w{display:flex;gap:16px;margin-top:14px;font-size:13px;color:var(--muted);justify-content:center}
 .legend-w span{display:flex;align-items:center;gap:6px}
 .legend-w i{width:8px;height:8px;border-radius:50%}
@@ -240,9 +240,6 @@ nav button.on{color:var(--accent);background:rgba(255,255,255,.14);box-shadow:in
 .panel-h{padding:0 6px}
 .panel-h span{font-size:20px;font-weight:700;background:linear-gradient(90deg,#64d2ff,#0a84ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .chart svg{touch-action:pan-y;overflow:visible;cursor:crosshair}
-.chart .glow{filter:drop-shadow(0 0 7px rgba(10,132,255,.8))}
-.chart .pulse{animation:pulse 2s ease-out infinite;transform-box:fill-box;transform-origin:center}
-@keyframes pulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(3);opacity:0}}
 .pr{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;color:#1a1300;background:linear-gradient(180deg,#ffe066,#ffb800);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px}
 .stats.three b{background:linear-gradient(180deg,#fff,#b7c4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 
@@ -429,7 +426,7 @@ function vHome(){
   const strip=["M","T","W","T","F","S","S"].map((l,i)=>{
     const d=pd(ws);d.setDate(d.getDate()+i);const k=ymd(d);
     const e=week.find(([,s])=>s.date===k);const c=e?wcol(e[1].workout):"";
-    return `<div class="wd ${k===ymd()?"today":""}"><span>${l}</span><i class="${e?"on":""}" ${e?`style="background:${c};box-shadow:0 0 14px ${c}88"`:""}>${e?tick:d.getDate()}</i></div>`;
+    return `<div class="wd ${k===ymd()?"today":""}"><span>${l}</span><i class="${e?"on":""}" ${e?`style="background:${c};"`:""}>${e?tick:d.getDate()}</i></div>`;
   }).join("");
   const order=Object.keys(WORKOUTS);
   const lastOf=k=>{const f=L.find(([,s])=>s.workout===k);return f?f[1].date:null};
@@ -584,12 +581,12 @@ function drawChart(el,pts,unit){
   const dots=P.map((p,i)=>i===P.length-1||i===bi?"":`<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#0b1020" stroke="#64d2ff" stroke-width="2"/>`).join("");
   const bp=P[bi];
   const best=P.length>1?`<circle cx="${bp.x}" cy="${bp.y}" r="6" fill="#ffd60a" stroke="#fff" stroke-width="2"/><text x="${Math.min(Math.max(bp.x,L+10),W-R-10)}" y="${bp.y-12}" text-anchor="middle" font-size="11" font-weight="700" fill="#ffd60a" ${FF}>${fmtN(bp.v)}</text>`:"";
-  const end=`<circle class="pulse" cx="${lp.x}" cy="${lp.y}" r="5" fill="#0a84ff"/><circle cx="${lp.x}" cy="${lp.y}" r="6" fill="#0a84ff" stroke="#fff" stroke-width="2.5"/>`;
+  const end=`<circle cx="${lp.x}" cy="${lp.y}" r="6" fill="#0a84ff" stroke="#fff" stroke-width="2.5"/>`;
   const xl=`<text x="${t1===t0?fp.x:L}" y="${H-6}" text-anchor="${t1===t0?"middle":"start"}" font-size="11" fill="var(--muted)" ${FF}>${fmtShort(pts[0].d)}</text>`+(t1!==t0?`<text x="${W-R}" y="${H-6}" text-anchor="end" font-size="11" fill="var(--muted)" ${FF}>${fmtShort(pts[pts.length-1].d)}</text>`:"");
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${unit} over time">
     <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a84ff" stop-opacity=".5"/><stop offset="1" stop-color="#0a84ff" stop-opacity="0"/></linearGradient>
     <linearGradient id="gl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bf5af2"/><stop offset=".5" stop-color="#0a84ff"/><stop offset="1" stop-color="#64d2ff"/></linearGradient></defs>
-    ${g}${area}<path class="glow" d="${line}" fill="none" stroke="url(#gl)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${best}${end}${xl}
+    ${g}${area}<path d="${line}" fill="none" stroke="url(#gl)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}${best}${end}${xl}
     <line id="sl" y1="${T}" y2="${H-B}" stroke="rgba(255,255,255,.5)" stroke-width="1.5" style="opacity:0"/><circle id="sc" r="6" fill="#fff" stroke="#0a84ff" stroke-width="3" style="opacity:0"/></svg>`;
   const svg=el.firstElementChild,sl=svg.querySelector("#sl"),sc=svg.querySelector("#sc"),hv=document.getElementById("pm-val");
   const base=hv?hv.textContent:"";
