@@ -371,7 +371,7 @@ function prevFor(name,sess){
 function formatLastSession(name,sess){
   const sets=prevFor(name,sess);
   if(!sets||!sets.length)return null;
-  const txt=sets.map(x=>x.kg!=null&&x.reps!=null?fmtN(x.kg)+"kg × "+fmtN(x.reps):x.kg!=null?fmtN(x.kg)+"kg":fmtN(x.reps)+" reps");
+  const txt=sets.map(x=>x.kg!=null&&x.reps!=null?fmtN(x.kg)+" x "+fmtN(x.reps):x.kg!=null?fmtN(x.kg):"x "+fmtN(x.reps));
   return "Last session: "+txt.join(", ");
 }
 function summary(sets){const v=sets.filter(x=>x.kg!=null);const top=v.length?Math.max(...v.map(x=>x.kg)):null;return {n:sets.length,top}}
@@ -525,7 +525,7 @@ function vSession(){
 function exSub(s,n){
   const e=s.ex[n];const v=validSets(e);
   if(v.length){const t=v.filter(x=>x.kg!=null&&x.reps>=6).reduce((a,x)=>!a||x.kg>a.kg||(x.kg===a.kg&&x.reps>a.reps)?x:a,null);return v.length+" set"+(v.length>1?"s":"")+(t?" · top "+fmtN(t.kg)+" kg with "+fmtN(t.reps)+" reps":"")}
-  const prev=formatLastSession(n,s);
+  const prev=S.open[n]?null:formatLastSession(n,s);
   if(prev)return prev;
   return "Not started";
 }
